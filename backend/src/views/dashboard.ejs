@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Console Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .date-filters {
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Search Console Analytics Dashboard</h1>
+        <p>Welcome <%= user.name %>
+        </p>
+        <a href="/auth/logout">Logout</a>
+    </div>
+
+    <div class="date-filters">
+        <input type="date" id="startDate" value="<%= new Date().toISOString().split('T')[0] %>">
+        <input type="date" id="endDate" value="<%= new Date().toISOString().split('T')[0] %>">
+        <button onclick="updateCharts()">Update</button>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="clicksChart"></canvas>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="impressionsChart"></canvas>
+    </div>
+
+    <script>
+        let clicksChart, impressionsChart;
+
+        async function fetchAnalytics(startDate, endDate) {
+            try {
+                const response = await fetch(`/api/search-analytics?startDate=${startDate}&endDate=${endDate}`);
+                return await response.json();
+            } catch (error) {
+                console.error('Error fetching analytics:', error);
+                return null;
+            }
+        }
+
+        function createClicksChart(data) {
+            const ctx = document.getElementById('clicksChart').getContext('2d');
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.rows.map(row => row.keys[0]),
+                    datasets: [{
+                        label: 'Clicks by Query',
+                        data: data.rows.map(row => row.clicks),
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Top Queries by Clicks'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createImpressionsChart(data) {
+            const ctx = document.getElementById('impressionsChart').getContext('2d');
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.rows.map(row => row.keys[0]),
+                    datasets: [{
+                        label: 'Impressions by Query',
+                        data: data.rows.map(row => row.impressions),
+                        fill: false,
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Top Queries by Impressions'
+                        }
+                    }
+                }
+            });
+        }
+
+        async function updateCharts() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            const data = await fetchAnalytics(startDate, endDate);
+            if (!data) return;
+
+            if (clicksChart) clicksChart.destroy();
+            if (impressionsChart) impressionsChart.destroy();
+
+            clicksChart = createClicksChart(data);
+            impressionsChart = createImpressionsChart(data);
+        }
+
+        // Initial load
+        updateCharts();
+    </script>
+</body>
+
+</html>

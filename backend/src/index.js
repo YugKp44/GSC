@@ -9,6 +9,10 @@ require('./config/passport');
 
 const app = express();
 
+// Set view engine
+app.set('view engine', 'ejs');
+app.set('views', './src/views');
+
 // Session middleware
 app.use(session({
   secret: process.env.SESSION_SECRET,
@@ -32,11 +36,7 @@ app.get('/dashboard', (req, res) => {
   if (!req.isAuthenticated()) {
     return res.redirect('/');
   }
-  res.send(`
-    <h1>Welcome ${req.user.name}</h1>
-    <p>Email: ${req.user.email}</p>
-    <a href="/auth/logout">Logout</a>
-  `);
+  res.render('dashboard', { user: req.user });
 });
 
 const PORT = process.env.PORT || 3000;

@@ -12,6 +12,8 @@
     "express-session": "^1.17.3",
     "dotenv": "^16.3.1",
     "googleapis": "^126.0.1",
-    "nodemon": "^3.0.1"
+    "nodemon": "^3.0.1",
+    "ejs": "^3.1.9",
+    "chart.js": "^4.4.0"
   }
 }
